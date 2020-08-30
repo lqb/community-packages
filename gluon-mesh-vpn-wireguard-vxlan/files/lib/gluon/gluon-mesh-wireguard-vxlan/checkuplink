@@ -22,7 +22,10 @@ check_handshake() {
 	if [ $? == 1 ]; then
 		local gateway="$(clean_port $1)"
 		local peer="$(clean_port "$(wg show $MESH_VPN_IFACE | grep endpoint | awk '{print $2}')")"
-		local other_ip="$(gluon-wan nslookup $gateway | grep -v $peer | grep 'Address [0-9]')"
+		local other_ip=""
+		if [ -n $peer ] ; then
+			other_ip="$(gluon-wan nslookup $gateway | grep -v $peer | grep 'Address [0-9]')"
+		fi
 		if [ "$other_ip" == "" ]; then
 			exit 1
 		fi
@@ -38,6 +41,18 @@ if [ "$?" -ne "0" ]; then
 	uci set wireguard.wireguard.privatekey=$(wg genkey);
 	uci commit wireguard
 fi
+
+#Set Debug SSID
+if [ $(uci get gluon.debug||echo false) = 'true' ] ; then :
+        suffix="$(uci get network.bat0.macaddr | sed "s/://g; s/^......//g")"
+        if ! grep -q "muenchen.freifunk.net/$suffix" /etc/config/wireless ; then
+                sed "s|muenchen.freifunk.net/.*|muenchen.freifunk.net/$suffix'|g" /etc/config/wireless -i
+                wifi
+        fi
+#       sed "s|muenchen.freifunk.net/.*|$(echo muenchen.freifunk.net/$(uci get network.bat0.macaddr | sed "s/://g; s/^........//g"))'|g" /etc/config/wireless -i
+
+fi
+
 
 # Is wireguard enabled?
 if [ "$(uci get wireguard.wireguard.enabled)" == "true" ] || [ "$(uci get wireguard.wireguard.enabled)" == "1" ]; then
