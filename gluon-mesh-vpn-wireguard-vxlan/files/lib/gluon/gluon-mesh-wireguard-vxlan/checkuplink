@@ -43,14 +43,12 @@ if [ "$?" -ne "0" ]; then
 fi
 
 #Set Debug SSID
-if [ $(uci get gluon.debug||echo false) = 'true' ] ; then :
+if [ $(uci get gluon.debug_ssid.enabled||echo false) = 'true' ] ; then
         suffix="$(uci get network.bat0.macaddr | sed "s/://g; s/^......//g")"
         if ! grep -q "muenchen.freifunk.net/$suffix" /etc/config/wireless ; then
                 sed "s|muenchen.freifunk.net/.*|muenchen.freifunk.net/$suffix'|g" /etc/config/wireless -i
                 wifi
         fi
-#       sed "s|muenchen.freifunk.net/.*|$(echo muenchen.freifunk.net/$(uci get network.bat0.macaddr | sed "s/://g; s/^........//g"))'|g" /etc/config/wireless -i
-
 fi
 
 
